@@ -1,0 +1,45 @@
+---
+title: "dbGaP study info"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, results = 'asis')
+source("fetch_dbgap_info.R")
+```
+
+
+```{r}
+phs <- "phs000286"
+version <- 6
+study.xml <- fetch_study_xml(phs)
+```
+
+## Study version
+
+```{r}
+vers <- xml_version(study.xml, version)
+cat(phs, "\n\n")
+cat("version:", vers$version, "\n\n")
+cat("participant set:", vers$participant_set, "\n\n")
+```
+
+## Consent and Data Use Limitations
+
+```{r}
+cons <- xml_consent(study.xml, version)
+for (i in 1:nrow(cons)) {
+    cat("###", cons$consent_code[i], "\n\n")
+    cat(cons$DUL[i], "\n\n")
+}
+```
+
+## Acknowledgements
+
+```{r}
+cat(xml_acknowledgements(study.xml, version))
+```
+
+
+
