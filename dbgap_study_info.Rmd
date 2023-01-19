@@ -11,8 +11,8 @@ source("fetch_dbgap_info.R")
 
 
 ```{r}
-phs <- "phs000286"
-version <- 6
+phs <- "phs000964"
+version <- 5
 study.xml <- fetch_study_xml(phs)
 ```
 
@@ -26,6 +26,12 @@ cat("participant set:", vers$participant_set, "\n\n")
 ```
 
 ## Consent and Data Use Limitations
+
+Link to pheno variable summaries:
+
+`r paste0("https://ftp.ncbi.nlm.nih.gov/dbgap/studies/", phs, "/", phs, ".v", vers$version, ".p", vers$participant_set, "/pheno_variable_summaries/")`
+
+Click on link ending in "Subject.data_dict.xml" to view consent codes.
 
 ```{r}
 cons <- xml_consent(study.xml, version)
