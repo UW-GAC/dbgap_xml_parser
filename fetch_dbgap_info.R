@@ -44,6 +44,9 @@ xml_consent <- function(study.xml, version=NULL) {
 }
 
 xml_acknowledgements <- function(study.xml, version=NULL) {
+    phs <- study.xml %>%
+        xml_find_first("Study") %>%
+        xml_attr("phs")
     pol <- study.xml %>%
         find_study_version(version) %>%
         xml_find_first("Policy")
@@ -52,7 +55,7 @@ xml_acknowledgements <- function(study.xml, version=NULL) {
         ack <- xml_child(pol, "DUC_AcknowledgementStatement")
         if (length(xml_child(ack, "File")) > 0) {
             vers <- xml_version(study.xml, version)
-            ack <- sprintf("https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/GetAcknowledgementStatement.cgi?study_id=phs000286.v%s.p%s", vers$version, vers$participant_set)
+            ack <- sprintf("https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/GetAcknowledgementStatement.cgi?study_id=phs%s.v%s.p%s", phs, vers$version, vers$participant_set)
         }
     }
     return(ack)
