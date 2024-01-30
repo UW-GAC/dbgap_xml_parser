@@ -50,3 +50,7 @@ rsconnect/
 
 ## Our additions
 *.html
+# renv
+renv/
+.Rprofile
+renv.lock
