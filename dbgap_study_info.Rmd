@@ -11,8 +11,8 @@ source("fetch_dbgap_info.R")
 
 
 ```{r}
-phs <- "phs000964"
-version <- 5
+phs <- "phs000280"
+version <- 8
 study.xml <- fetch_study_xml(phs)
 ```
 
@@ -41,11 +41,14 @@ for (i in 1:nrow(cons)) {
 }
 ```
 
+## GSR posting
+
+```{r}
+cat(xml_gsr(study.xml, version))
+```
+
 ## Acknowledgements
 
 ```{r}
 cat(xml_acknowledgements(study.xml, version))
 ```
-
-
-
