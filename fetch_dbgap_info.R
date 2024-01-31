@@ -61,6 +61,15 @@ xml_acknowledgements <- function(study.xml, version=NULL) {
     return(ack)
 }
 
+# Determine if a study version is marked as "sensitive" for GSR posting.
+xml_gsr <- function(study.xml, version=NULL) {
+    gsr <- study.xml %>%
+        find_study_version(version) %>%
+        xml_find_first("Policy") %>%
+        xml_find_all("GSR_Access")
+    xml_attr(gsr, "gsr_mode_label")
+}
+
 xml_partners <- function(study.xml, version=NULL) {
     part <- study.xml %>%
         find_study_version(version) %>%
@@ -96,8 +105,8 @@ xml_children <- function(study.xml, version=NULL) {
 xml_pi <- function(study.xml, version=NULL) {
     people <- study.xml %>%
         find_study_version(version) %>%
-        xml_find_first("Authority") %>% 
-        xml_find_first("Persons") %>% 
+        xml_find_first("Authority") %>%
+        xml_find_first("Persons") %>%
         xml_find_all("Person")
     roles <- xml_find_all(people, "Role") %>%
         xml_text()
