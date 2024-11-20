@@ -1,0 +1,62 @@
+---
+title: "Get info for all studies in dbGaP"
+output: html_notebook
+---
+
+```{r}
+source("fetch_dbgap_info.R")
+```
+
+```{r}
+N <- 3809 # https://ftp.ncbi.nlm.nih.gov/dbgap/studies/
+start <- 3801
+end <- N
+for (start in seq(1, 3701, 100)) {
+    end <- start+100-1
+    phs <- paste0("phs", stringr::str_pad(start:end, width=6, side="left", pad="0"))
+    dat <- lapply(phs, function(x) {
+        tryCatch({
+            tmp <- fetch_study_xml(x)
+            date <- xml_release_date(tmp, version=1)
+            if (date == "N/A") stop()
+            cons <- tmp %>%
+                xml_consent() %>%
+                select(-DUL) %>%
+                filter(consent_code != "EA") %>%
+                mutate(phs=x)
+            info <- tmp %>%
+                xml_info() %>%
+                select(-accession) %>%
+                mutate(phs=x)
+            part <- tmp %>%
+                xml_partners() %>%
+                arrange(trusted_partner) %>%
+                unlist(use.names=FALSE) %>%
+                paste(collapse=", ")
+            gsr <- xml_gsr(tmp)
+            vers <- xml_version(tmp) %>%
+                mutate(phs=x)
+            dars <- count_dars(x, v=vers$version, p=vers$participant_set)
+            cons %>%
+                left_join(info, by="phs") %>%
+                left_join(vers, by="phs") %>%
+                mutate(release_date = date,
+                       num_DARs = dars,
+                       trusted_partner = part,
+                       GSR = gsr) %>%
+                relocate(phs, version, participant_set)
+        }, error=function(e) NULL
+        )
+    }) %>%
+        bind_rows()
+    saveRDS(dat, file=paste0("dbGaP_study_consent_", start, ".rds"))
+}
+```
+
+```{r}
+files <- list.files(pattern="dbGaP_study_consent_")
+dat <- lapply(files, readRDS) %>% 
+    bind_rows() %>%
+    arrange(phs)
+saveRDS(dat, "dbGaP_study_consent.rds")
+```

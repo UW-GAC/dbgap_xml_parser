@@ -1,5 +1,6 @@
 library(xml2)
 library(dplyr)
+library(readr)
 
 # if a release is in progress but not completed, this will return the
 # in-progress version rather than the released version
@@ -30,6 +31,13 @@ xml_version <- function(study.xml, version=NULL) {
         version=xml_attr(dat, "v"),
         participant_set=xml_attr(dat, "p")
     )
+}
+
+xml_release_date <- function(study.xml, version=NULL) {
+    stat <- study.xml %>%
+        find_study_version(version) %>%
+        xml_find_first("Status")
+    substr(xml_attr(stat, "release_date"), 1, 10)
 }
 
 xml_consent <- function(study.xml, version=NULL) {
@@ -203,4 +211,19 @@ count_samples_html <- function(this.study) {
     html[which(grepl("sample ids are Loaded", html))] %>%
         stringr::str_extract("[:digit:]+") %>%
         as.integer()
+}
+
+
+fetch_dars <- function(this.study, v, p) {
+    url <- paste0("https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/GetAuthorizedRequestDownload.cgi?study_id=", this.study, ".v", v, ".p", p)
+    dars <- suppressWarnings(read_tsv(url, show_col_types = FALSE))
+    if (nrow(dars) == 0) dars <- tibble()
+    dars
+}
+
+count_dars <- function(this.study, v, p) {
+    url <- paste0("https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/GetAuthorizedRequestDownload.cgi?study_id=", this.study, ".v", v, ".p", p)
+    dars <- suppressWarnings(readLines(url))
+    num <- if (length(dars) > 1) (length(dars) - 1) else 0
+    return(num)
 }
