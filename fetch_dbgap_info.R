@@ -12,10 +12,20 @@ fetch_study_xml <- function(this.study) {
 
 find_study_version <- function(study.xml, version=NULL) {
     if (is.null(version)) {
-        return(xml_find_first(study.xml, "Study"))
+        dat <- xml_find_first(study.xml, "Study")
+        # if participant set is missing, this version of the study is not released
+        # first newest version that has a participant set
+        if (is.na(xml_attr(dat, "p"))) {
+            dat <- xml_find_all(study.xml, "Study")
+            for (i in seq_along(dat)) {
+                if (!is.na(xml_attr(dat[i], "p"))) {
+                    return(dat[i])
+                }
+            }
+        }
+        return(dat)
     } else {
-        dat <- study.xml %>%
-            xml_find_all("Study")
+        dat <- xml_find_all(study.xml, "Study")
         for (i in seq_along(dat)) {
             if (xml_attr(dat[i], "v") == version) {
                 return(dat[i])
@@ -34,10 +44,21 @@ xml_version <- function(study.xml, version=NULL) {
 }
 
 xml_release_date <- function(study.xml, version=NULL) {
-    stat <- study.xml %>%
-        find_study_version(version) %>%
-        xml_find_first("Status")
-    substr(xml_attr(stat, "release_date"), 1, 10)
+    study <- study.xml %>%
+        find_study_version(version)
+    if (!is.null(study)) {
+        stat <- study %>%
+            xml_find_first("Status")
+        date <- substr(xml_attr(stat, "release_date"), 1, 10)
+    } else {
+        date <- "N/A"
+    }
+    if (date == "N/A") {
+        study <- study.xml %>%
+            find_study_version(NULL)
+        date <- substr(xml_attr(study, "targetPublicReleaseDate"), 1, 10)
+    }
+    date
 }
 
 xml_consent <- function(study.xml, version=NULL) {
@@ -82,7 +103,7 @@ xml_partners <- function(study.xml, version=NULL) {
     part <- study.xml %>%
         find_study_version(version) %>%
         xml_find_first("Policy") %>%
-        xml_find_first("TrustedPartners") %>%
+        xml_find_all("TrustedPartners") %>%
         xml_find_all("TrustedPartner")
     tibble(trusted_partner=xml_attr(part, "trp_db_name"))
 }
