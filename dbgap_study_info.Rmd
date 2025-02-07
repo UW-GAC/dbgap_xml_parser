@@ -11,8 +11,8 @@ source("fetch_dbgap_info.R")
 
 
 ```{r}
-phs <- "phs000280"
-version <- 8
+phs <- "phs001416"
+version <- 4
 study.xml <- fetch_study_xml(phs)
 ```
 

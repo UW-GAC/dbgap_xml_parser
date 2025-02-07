@@ -12,11 +12,14 @@ N <- 3809 # https://ftp.ncbi.nlm.nih.gov/dbgap/studies/
 start <- 3801
 end <- N
 for (start in seq(1, 3701, 100)) {
-    end <- start+10-1
+    end <- start+100-1
     phs <- paste0("phs", stringr::str_pad(start:end, width=6, side="left", pad="0"))
     dat <- lapply(phs, function(x) {
         tmp <- fetch_study_xml(x)
+        study <- xml_find_first(tmp, "Study")
+        if (is.na(study)) return(NULL)
         date <- xml_release_date(tmp, version=1)
+        latest_date <- xml_release_date(tmp, version=NULL)
         cons <- tmp %>%
             xml_consent() %>%
             select(-DUL) %>%
@@ -44,8 +47,9 @@ for (start in seq(1, 3701, 100)) {
         cons %>%
             left_join(info, by="phs") %>%
             left_join(vers, by="phs") %>%
-            mutate(release_date = date,
-                   num_DARs = dars,
+            mutate(first_release_date = date,
+                   latest_release_date = latest_date,
+                   #num_DARs = dars,
                    trusted_partner = part,
                    GSR = gsr) %>%
             relocate(phs, version, participant_set)
